@@ -1,4 +1,5 @@
 import express from "express";
+import bcrypt from "bcryptjs";
 import { UserModel } from "../models/User.js";
 
 const router = express.Router();
@@ -12,9 +13,12 @@ router.post("/register", async (req, res) => {
   if (user) {
     return res.status(400).json({ message: "Username already exists" });
   }
+  
+  // Hash the password before saving
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   // Create and save the new user
-  const newUser = new UserModel({ username, password });
+  const newUser = new UserModel({ username, password: hashedPassword });
   await newUser.save();
 
   res.json({ message: "User registered successfully!" });
