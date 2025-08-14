@@ -1,5 +1,6 @@
 import express from "express";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { UserModel } from "../models/User.js";
 
 const router = express.Router();
@@ -23,5 +24,26 @@ router.post("/register", async (req, res) => {
 
   res.json({ message: "User registered successfully!" });
 });
+
+// Login endpoint
+router.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+  
+    const user = await UserModel.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+  
+    // Compare the provided password with the hashed password in the DB
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+  
+    // Generate a token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+  
+    res.json({ token, userID: user._id });
+  });
 
 export { router as userRouter };
